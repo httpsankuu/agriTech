@@ -1,5 +1,5 @@
 ---
-status: issues
+status: clean
 files_reviewed: 6
 critical: 0
 warning: 4
