@@ -43,3 +43,33 @@ python src/data_engineering/clean_data.py
 - `Dataset/clean/`: Contains the clean, standardized CSV files ready for the Analytics Layer.
   - See `Dataset/clean/DATA_DICTIONARY.md` for column definitions.
 - `src/data_engineering/clean_data.py`: The reproducible data rescue pipeline.
+
+## Phase 2: Analytics Layer
+The analytical layer computes the core metrics and sets up the database.
+To build the model, run:
+\\\ash
+python src/analytics/build_model.py
+\\\
+
+## Phase 3: Executive Dashboard
+The executive dashboard provides an interactive Newsprint-style intelligence system for monitoring the supply chain.
+
+### How to Run the Dashboard
+Ensure the SQLite database has been generated from Phase 2, then run:
+\\\ash
+streamlit run src/dashboard/app.py
+\\\
+
+### Dashboard Architecture
+- **app.py**: Dashboard orchestration, filters, and layout.
+- **components.py**: Reusable UI elements (KPI cards, headers).
+- **charts.py**: Plotly visualization functions configured with the Newsprint theme.
+- **queries.py**: SQLite data access layer with Streamlit caching.
+- **styles.css**: Centralized styling enforcing the Newsprint visual identity (black, off-white, muted grey, agri-green).
+
+### Main Metrics
+- **Total Arrivals**: Volume in Quintals arriving at Mandis.
+- **Price Crashes**: Instances where wholesale modal price falls below Minimum Support Price (MSP).
+- **Transport Delay Rate**: Percentage of trips exceeding 1.5× the average route transit time.
+- **Weather Impact**: Association between daily rainfall and arrival volume.
+
