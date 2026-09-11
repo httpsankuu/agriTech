@@ -134,7 +134,7 @@ def create_price_vs_msp_chart(df):
 
 def create_weather_impact_chart(df):
     """Create a scatter plot for weather vs arrivals."""
-    if df.empty or df['total_rainfall_mm'].isna().all():
+    if df.empty or 'total_rainfall_mm' not in df.columns or 'daily_arrivals_qtl' not in df.columns or df['total_rainfall_mm'].isna().all():
         return None
         
     # Filter out missing weather
