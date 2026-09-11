@@ -75,17 +75,17 @@ def main():
 
     # Apply Filters
     def filter_df(df, date_col=None, crop_col=None, mandi_col=None, district_col=None):
-        filtered = df.copy()
-        if date_range and len(date_range) == 2 and date_col and date_col in filtered.columns:
+        mask = pd.Series(True, index=df.index)
+        if date_range and len(date_range) == 2 and date_col and date_col in df.columns:
             start_date, end_date = pd.to_datetime(date_range[0]), pd.to_datetime(date_range[1])
-            filtered = filtered[(filtered[date_col] >= start_date) & (filtered[date_col] <= end_date)]
-        if selected_crops and crop_col and crop_col in filtered.columns:
-            filtered = filtered[filtered[crop_col].isin(selected_crops)]
-        if selected_mandis and mandi_col and mandi_col in filtered.columns:
-            filtered = filtered[filtered[mandi_col].isin(selected_mandis)]
-        if selected_districts and district_col and district_col in filtered.columns:
-            filtered = filtered[filtered[district_col].isin(selected_districts)]
-        return filtered
+            mask = mask & (df[date_col] >= start_date) & (df[date_col] <= end_date)
+        if selected_crops and crop_col and crop_col in df.columns:
+            mask = mask & (df[crop_col].isin(selected_crops))
+        if selected_mandis and mandi_col and mandi_col in df.columns:
+            mask = mask & (df[mandi_col].isin(selected_mandis))
+        if selected_districts and district_col and district_col in df.columns:
+            mask = mask & (df[district_col].isin(selected_districts))
+        return df[mask]
 
     f_crop = filter_df(df_crop, date_col='date', crop_col='crop_name', mandi_col='mandi_name')
     # trends only has day_date, can't easily filter by crop/mandi without re-aggregating, but we use views
