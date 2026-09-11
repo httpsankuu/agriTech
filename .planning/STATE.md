@@ -5,7 +5,7 @@
 
 ## Phase Progress
 - **Phase 1**: Done
-- **Phase 2**: Not Started
+- **Phase 2**: Done
 - **Phase 3**: Not Started
 - **Phase 4**: Not Started
 
