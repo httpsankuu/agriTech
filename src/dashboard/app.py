@@ -38,15 +38,7 @@ def main():
         df_delays = get_transit_delays()
         df_weather = get_weather_impact()
 
-    # Apply global date conversion for filtering
-    if 'date' in df_crop.columns:
-        df_crop['date'] = pd.to_datetime(df_crop['date'])
-    if 'day_date' in df_trends.columns:
-        df_trends['day_date'] = pd.to_datetime(df_trends['day_date'])
-    if 'date' in df_price.columns:
-        df_price['date'] = pd.to_datetime(df_price['date'])
-    if 'date' in df_weather.columns:
-        df_weather['date'] = pd.to_datetime(df_weather['date'])
+    # Global date conversion is now handled in queries.py via parse_dates
         
     # Minimum and Maximum dates across datasets
     all_dates = pd.concat([

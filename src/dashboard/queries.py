@@ -18,7 +18,7 @@ def get_connection():
 def get_crop_summary():
     """Load crop summary view."""
     conn = get_connection()
-    return pd.read_sql("SELECT * FROM vw_crop_summary", conn)
+    return pd.read_sql("SELECT * FROM vw_crop_summary", conn, parse_dates=['date'])
 
 @st.cache_data(ttl=3600)
 def get_mandi_performance():
@@ -30,13 +30,13 @@ def get_mandi_performance():
 def get_arrival_trends():
     """Load arrival trends view."""
     conn = get_connection()
-    return pd.read_sql("SELECT * FROM vw_arrival_trends", conn)
+    return pd.read_sql("SELECT * FROM vw_arrival_trends", conn, parse_dates=['day_date'])
 
 @st.cache_data(ttl=3600)
 def get_price_vs_msp():
     """Load price vs msp view."""
     conn = get_connection()
-    return pd.read_sql("SELECT * FROM vw_price_vs_msp", conn)
+    return pd.read_sql("SELECT * FROM vw_price_vs_msp", conn, parse_dates=['date'])
 
 @st.cache_data(ttl=3600)
 def get_transit_delays():
@@ -48,4 +48,4 @@ def get_transit_delays():
 def get_weather_impact():
     """Load weather impact view."""
     conn = get_connection()
-    return pd.read_sql("SELECT * FROM vw_weather_impact", conn)
+    return pd.read_sql("SELECT * FROM vw_weather_impact", conn, parse_dates=['date'])
