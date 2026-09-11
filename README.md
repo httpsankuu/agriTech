@@ -47,18 +47,18 @@ python src/data_engineering/clean_data.py
 ## Phase 2: Analytics Layer
 The analytical layer computes the core metrics and sets up the database.
 To build the model, run:
-\\\ash
+```bash
 python src/analytics/build_model.py
-\\\
+```
 
 ## Phase 3: Executive Dashboard
 The executive dashboard provides an interactive Newsprint-style intelligence system for monitoring the supply chain.
 
 ### How to Run the Dashboard
 Ensure the SQLite database has been generated from Phase 2, then run:
-\\\ash
+```bash
 streamlit run src/dashboard/app.py
-\\\
+```
 
 ### Dashboard Architecture
 - **app.py**: Dashboard orchestration, filters, and layout.
