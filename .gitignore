@@ -1,0 +1,3 @@
+*.db
+Dataset/*
+!Dataset/clean/DATA_DICTIONARY.md
