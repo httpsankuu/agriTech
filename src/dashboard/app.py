@@ -54,8 +54,8 @@ def main():
         df_price['date'] if not df_price.empty else pd.Series(dtype='datetime64[ns]')
     ])
     
-    min_date = all_dates.min().date() if not all_dates.empty else None
-    max_date = all_dates.max().date() if not all_dates.empty else None
+    min_date = all_dates.dropna().min().date() if not all_dates.dropna().empty else None
+    max_date = all_dates.dropna().max().date() if not all_dates.dropna().empty else None
 
     # Sidebar Filters
     st.sidebar.html("<div style='font-family: Playfair Display; font-size: 1.5rem; font-weight: bold; border-bottom: 2px solid var(--ink); padding-bottom: 0.5rem; margin-bottom: 1rem;'>FILTERS</div>")
