@@ -48,11 +48,53 @@ def build_model():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_wthr_date ON fact_weather(date_str)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_wthr_mandi ON fact_weather(mandi_num)")
     
-    # View 1: Price vs MSP
-    cursor.execute("""
+    # 1. Total arrivals & Crop-wise distribution
+    cursor.execute('''
+        CREATE VIEW IF NOT EXISTS vw_crop_summary AS
+        SELECT 
+            a.date_str as date,
+            a.mandi_id,
+            m.mandi_name,
+            a.crop_name,
+            SUM(a.arrival_quantity_qtl) AS total_arrival_qtl,
+            SUM(a.farmer_count) AS total_farmers
+        FROM fact_arrivals a
+        LEFT JOIN dim_mandi m ON a.mandi_id = m.mandi_id
+        GROUP BY a.date_str, a.mandi_id, m.mandi_name, a.crop_name
+    ''')
+
+    # 2. Top Mandis by arrival volume
+    cursor.execute('''
+        CREATE VIEW IF NOT EXISTS vw_mandi_performance AS
+        SELECT 
+            a.mandi_id,
+            m.mandi_name,
+            m.district,
+            m.state,
+            SUM(a.arrival_quantity_qtl) AS total_arrival_volume_qtl
+        FROM fact_arrivals a
+        LEFT JOIN dim_mandi m ON a.mandi_id = m.mandi_id
+        GROUP BY a.mandi_id, m.mandi_name, m.district, m.state
+        ORDER BY total_arrival_volume_qtl DESC
+    ''')
+
+    # 3. Daily/weekly/monthly arrival trends
+    cursor.execute('''
+        CREATE VIEW IF NOT EXISTS vw_arrival_trends AS
+        SELECT 
+            strftime('%Y-%m-%d', a.date_str) as day_date,
+            strftime('%Y-%W', a.date_str) as week_str,
+            strftime('%Y-%m', a.date_str) as month_str,
+            SUM(a.arrival_quantity_qtl) as daily_total_qtl
+        FROM fact_arrivals a
+        GROUP BY a.date_str
+    ''')
+
+    # 4. Wholesale modal price vs MSP & Price crash instances
+    cursor.execute('''
         CREATE VIEW IF NOT EXISTS vw_price_vs_msp AS
         SELECT 
-            p.date,
+            p.date_str as date,
             p.mandi_id,
             m.mandi_name,
             m.district,
@@ -63,53 +105,60 @@ def build_model():
             CASE WHEN p.modal_price < p.msp THEN 1 ELSE 0 END AS is_price_crash
         FROM fact_prices p
         LEFT JOIN dim_mandi m ON p.mandi_id = m.mandi_id
-    """)
-    
-    # View 2: Transit Performance
-    cursor.execute("""
-        CREATE VIEW IF NOT EXISTS vw_transit_performance AS
+    ''')
+
+    # 5. Average transit time by warehouse & Transport delay rate & Highest-delay routes
+    # Assumption: A trip is delayed if its transit time is > 1.5x the average transit time for that specific route.
+    # Excludes invalid transit records.
+    cursor.execute('''
+        CREATE VIEW IF NOT EXISTS vw_transit_delays AS
+        WITH RouteStats AS (
+            SELECT 
+                mandi_id, 
+                destination_warehouse, 
+                AVG(transit_hours_clean) as avg_transit_hours
+            FROM fact_logistics
+            WHERE transit_hours_clean IS NOT NULL
+            GROUP BY mandi_id, destination_warehouse
+        )
         SELECT 
-            mandi_id,
-            destination_warehouse,
-            AVG(transit_hours) AS avg_transit_hours,
-            AVG(distance_km) AS avg_distance_km,
-            COUNT(trip_id) AS total_trips
-        FROM fact_logistics
-        GROUP BY mandi_id, destination_warehouse
-    """)
-    
-    # View 3: Crop Summary
-    cursor.execute("""
-        CREATE VIEW IF NOT EXISTS vw_crop_summary AS
+            l.mandi_id,
+            l.destination_warehouse,
+            r.avg_transit_hours,
+            COUNT(l.trip_id) as total_trips,
+            SUM(CASE WHEN l.transit_hours_clean > r.avg_transit_hours * 1.5 THEN 1 ELSE 0 END) as delayed_trips,
+            CAST(SUM(CASE WHEN l.transit_hours_clean > r.avg_transit_hours * 1.5 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(l.trip_id) as delay_rate
+        FROM fact_logistics l
+        JOIN RouteStats r ON l.mandi_id = r.mandi_id AND l.destination_warehouse = r.destination_warehouse
+        WHERE l.transit_hours_clean IS NOT NULL
+        GROUP BY l.mandi_id, l.destination_warehouse, r.avg_transit_hours
+    ''')
+
+    # 6. Weather impact on crop arrivals (Rainfall vs arrival-volume relationship)
+    # Joining Arrivals and Weather on mandi_num (extracted digits) and date string.
+    cursor.execute('''
+        CREATE VIEW IF NOT EXISTS vw_weather_impact AS
+        WITH DailyWeather AS (
+            SELECT 
+                mandi_num,
+                date_str,
+                MAX(temperature_c) as max_temp_c,
+                SUM(rainfall_mm) as total_rainfall_mm
+            FROM fact_weather
+            GROUP BY mandi_num, date_str
+        )
         SELECT 
-            a.date,
+            a.date_str as date,
             a.mandi_id,
             m.mandi_name,
-            a.crop_name,
-            SUM(a.arrival_quantity_qtl) AS total_arrival_qtl,
-            SUM(a.farmer_count) AS total_farmers
+            SUM(a.arrival_quantity_qtl) AS daily_arrivals_qtl,
+            w.max_temp_c,
+            w.total_rainfall_mm
         FROM fact_arrivals a
         LEFT JOIN dim_mandi m ON a.mandi_id = m.mandi_id
-        GROUP BY a.date, a.mandi_id, m.mandi_name, a.crop_name
-    """)
-    
-    # View 4: Mandi Daily Summary (Joining Arrivals and Weather)
-    cursor.execute("""
-        CREATE VIEW IF NOT EXISTS vw_mandi_daily_summary AS
-        SELECT 
-            a.date,
-            a.mandi_id,
-            m.mandi_name,
-            m.district,
-            SUM(a.arrival_quantity_qtl) AS total_daily_arrivals,
-            MAX(w.temperature_c) AS max_temp_c,
-            SUM(w.rainfall_mm) AS total_rainfall_mm
-        FROM fact_arrivals a
-        LEFT JOIN dim_mandi m ON a.mandi_id = m.mandi_id
-        LEFT JOIN fact_weather w ON a.mandi_num = w.mandi_num 
-             AND a.date_str = w.date_str
-        GROUP BY a.date, a.mandi_id, m.mandi_name, m.district
-    """)
+        LEFT JOIN DailyWeather w ON a.mandi_num = w.mandi_num AND a.date_str = w.date_str
+        GROUP BY a.date_str, a.mandi_id, m.mandi_name, w.max_temp_c, w.total_rainfall_mm
+    ''')
     
     conn.commit()
     conn.close()
