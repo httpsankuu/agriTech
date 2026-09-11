@@ -1,0 +1,165 @@
+/* Newsprint Theme CSS for Streamlit */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+
+:root {
+    --paper: #F7F6F0;
+    --ink: #111111;
+    --muted: #E8E7E0;
+    --agri-green: #2F6B3F;
+    --ed-red: #B42318;
+    --border-color: #111111;
+}
+
+/* Base styling */
+.stApp {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    /* Subtle paper texture using radial gradient */
+    background-image: radial-gradient(var(--muted) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    color: var(--ink);
+    font-weight: 700;
+}
+
+/* Remove default rounded corners */
+div[data-testid="stMetric"], 
+div[data-testid="stExpander"], 
+div[data-testid="stSidebar"],
+div.stSelectbox > div,
+div.stMultiSelect > div,
+button,
+div.stDataFrame {
+    border-radius: 0px !important;
+}
+
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background-color: var(--muted);
+    border-right: 3px solid var(--border-color);
+}
+[data-testid="stSidebar"] hr {
+    border-top: 1px solid var(--border-color);
+}
+
+/* Masthead (Header) */
+.masthead {
+    border-bottom: 4px solid var(--ink);
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+.masthead-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    margin: 0;
+    line-height: 1.1;
+}
+.masthead-subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    color: var(--ink);
+}
+.masthead-meta {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 0.25rem 0;
+    margin-top: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* KPI Cards (Metrics) */
+[data-testid="stMetric"] {
+    background-color: transparent;
+    border: 1px solid var(--ink);
+    padding: 1rem;
+    box-shadow: none;
+    border-radius: 0px;
+    position: relative;
+}
+[data-testid="stMetricLabel"] {
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+}
+[data-testid="stMetricValue"] {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: var(--ink);
+}
+[data-testid="stMetricDelta"] {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+}
+
+/* Sections */
+.section-header {
+    border-top: 3px solid var(--ink);
+    border-bottom: 1px solid var(--ink);
+    padding: 0.5rem 0;
+    margin: 2rem 0 1rem 0;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+/* Utility classes */
+.mono-text {
+    font-family: 'JetBrains Mono', monospace;
+}
+.ed-red {
+    color: var(--ed-red);
+}
+.agri-green {
+    color: var(--agri-green);
+}
+
+/* Chart/Figure Captions */
+.figure-caption {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    border-top: 1px solid var(--ink);
+    padding-top: 0.25rem;
+    margin-top: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+/* DataFrame/Tables */
+.stDataFrame {
+    border: 1px solid var(--ink) !important;
+}
+div[data-testid="stTable"] th {
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    background-color: var(--muted);
+    border-bottom: 2px solid var(--ink);
+}
+div[data-testid="stTable"] td {
+    font-family: 'Inter', sans-serif;
+    border-bottom: 1px solid #ccc;
+}
+
+/* Layout overrides */
+hr {
+    border-top: 1px solid var(--ink);
+}
