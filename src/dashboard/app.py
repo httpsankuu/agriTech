@@ -1,6 +1,10 @@
 import os
+import sys
 import streamlit as st
 import pandas as pd
+
+# Ensure src/dashboard is on the path for sibling imports
+sys.path.insert(0, os.path.dirname(__file__))
 
 from queries import (
     get_crop_summary, get_mandi_performance, get_arrival_trends,

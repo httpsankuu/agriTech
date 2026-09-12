@@ -1,7 +1,7 @@
 import plotly.express as px
 import plotly.graph_objects as go
 
-# Design Tokens
+# Design Tokens — kept in sync with styles.css
 COLORS = {
     "paper": "#F7F6F0",
     "ink": "#111111",
@@ -49,106 +49,112 @@ def apply_newsprint_theme(fig):
 
 def create_arrival_trend_chart(df):
     """Create a daily arrival trend line chart."""
-    if df.empty:
+    if df is None or df.empty:
         return None
+    
+    try:
+        df = df.sort_values('day_date')
+        fig = px.line(
+            df, 
+            x='day_date', 
+            y='daily_total_qtl',
+            title="FIG. 01 — DAILY ARRIVAL VOLUME",
+            labels={'day_date': 'DATE', 'daily_total_qtl': 'ARRIVAL VOLUME (QTL)'}
+        )
         
-    df = df.sort_values('day_date')
-    fig = px.line(
-        df, 
-        x='day_date', 
-        y='daily_total_qtl',
-        title="FIG. 01 — DAILY ARRIVAL VOLUME",
-        labels={'day_date': 'DATE', 'daily_total_qtl': 'ARRIVAL VOLUME (QTL)'}
-    )
-    
-    fig.update_traces(line=dict(color=COLORS["ink"], width=2))
-    
-    # Fill to zero for visual weight
-    fig.update_traces(fill='tozeroy', fillcolor='rgba(17, 17, 17, 0.05)')
-    
-    return apply_newsprint_theme(fig)
+        fig.update_traces(line=dict(color=COLORS["ink"], width=2))
+        fig.update_traces(fill='tozeroy', fillcolor='rgba(17, 17, 17, 0.05)')
+        return apply_newsprint_theme(fig)
+    except Exception:
+        return None
 
 def create_crop_distribution_chart(df):
     """Create a horizontal bar chart of arrivals by crop."""
-    if df.empty:
+    if df is None or df.empty:
         return None
+    
+    try:
+        crop_totals = df.groupby('crop_name')['total_arrival_qtl'].sum().reset_index()
+        crop_totals = crop_totals.sort_values('total_arrival_qtl', ascending=True)
         
-    crop_totals = df.groupby('crop_name')['total_arrival_qtl'].sum().reset_index()
-    crop_totals = crop_totals.sort_values('total_arrival_qtl', ascending=True)
-    
-    fig = px.bar(
-        crop_totals, 
-        y='crop_name', 
-        x='total_arrival_qtl',
-        orientation='h',
-        title="FIG. 02 — CROP DISTRIBUTION",
-        labels={'crop_name': 'CROP', 'total_arrival_qtl': 'TOTAL VOLUME (QTL)'}
-    )
-    
-    fig.update_traces(marker_color=COLORS["ink"], marker_line_color=COLORS["ink"], marker_line_width=1)
-    
-    fig = apply_newsprint_theme(fig)
-    fig.update_layout(yaxis=dict(showgrid=False))
-    return fig
+        fig = px.bar(
+            crop_totals, 
+            y='crop_name', 
+            x='total_arrival_qtl',
+            orientation='h',
+            title="FIG. 02 — CROP DISTRIBUTION",
+            labels={'crop_name': 'CROP', 'total_arrival_qtl': 'TOTAL VOLUME (QTL)'}
+        )
+        
+        fig.update_traces(marker_color=COLORS["ink"], marker_line_color=COLORS["ink"], marker_line_width=1)
+        fig = apply_newsprint_theme(fig)
+        fig.update_layout(yaxis=dict(showgrid=False))
+        return fig
+    except Exception:
+        return None
 
 def create_price_vs_msp_chart(df):
     """Create a chart comparing modal price to MSP."""
-    if df.empty:
+    if df is None or df.empty:
         return None
+    
+    try:
+        df = df.sort_values('date')
         
-    df = df.sort_values('date')
-    
-    fig = go.Figure()
-    
-    fig.add_trace(go.Scatter(
-        x=df['date'],
-        y=df['modal_price'],
-        mode='lines',
-        name='MODAL PRICE',
-        line=dict(color=COLORS["ink"], width=2)
-    ))
-    
-    fig.add_trace(go.Scatter(
-        x=df['date'],
-        y=df['msp'],
-        mode='lines',
-        name='MSP',
-        line=dict(color=COLORS["green"], width=2, dash='dash')
-    ))
-    
-    fig.update_layout(
-        title="FIG. 03 — PRICE DISCOVERY (MODAL VS MSP)",
-        xaxis_title="DATE",
-        yaxis_title="PRICE (INR)",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1,
-            font=dict(family="JetBrains Mono", size=10)
+        fig = go.Figure()
+        
+        fig.add_trace(go.Scatter(
+            x=df['date'],
+            y=df['modal_price'],
+            mode='lines',
+            name='MODAL PRICE',
+            line=dict(color=COLORS["ink"], width=2)
+        ))
+        
+        fig.add_trace(go.Scatter(
+            x=df['date'],
+            y=df['msp'],
+            mode='lines',
+            name='MSP',
+            line=dict(color=COLORS["green"], width=2, dash='dash')
+        ))
+        
+        fig.update_layout(
+            title="FIG. 03 — PRICE DISCOVERY (MODAL VS MSP)",
+            xaxis_title="DATE",
+            yaxis_title="PRICE (INR)",
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                font=dict(family="JetBrains Mono", size=10)
+            )
         )
-    )
-    
-    return apply_newsprint_theme(fig)
+        
+        return apply_newsprint_theme(fig)
+    except Exception:
+        return None
 
 def create_weather_impact_chart(df):
     """Create a scatter plot for weather vs arrivals."""
-    if df.empty or 'total_rainfall_mm' not in df.columns or 'daily_arrivals_qtl' not in df.columns or df['total_rainfall_mm'].isna().all():
+    if df is None or df.empty or 'total_rainfall_mm' not in df.columns or 'daily_arrivals_qtl' not in df.columns or df['total_rainfall_mm'].isna().all():
         return None
+    
+    try:
+        plot_df = df.dropna(subset=['total_rainfall_mm', 'daily_arrivals_qtl'])
         
-    # Filter out missing weather
-    plot_df = df.dropna(subset=['total_rainfall_mm', 'daily_arrivals_qtl'])
-    
-    fig = px.scatter(
-        plot_df,
-        x='total_rainfall_mm',
-        y='daily_arrivals_qtl',
-        title="FIG. 04 — OBSERVED RELATIONSHIP: RAINFALL × ARRIVALS",
-        labels={'total_rainfall_mm': 'TOTAL RAINFALL (MM)', 'daily_arrivals_qtl': 'DAILY ARRIVALS (QTL)'},
-        opacity=0.7
-    )
-    
-    fig.update_traces(marker=dict(color=COLORS["ink"], size=8, line=dict(width=1, color=COLORS["paper"])))
-    
-    return apply_newsprint_theme(fig)
+        fig = px.scatter(
+            plot_df,
+            x='total_rainfall_mm',
+            y='daily_arrivals_qtl',
+            title="FIG. 04 — OBSERVED RELATIONSHIP: RAINFALL × ARRIVALS",
+            labels={'total_rainfall_mm': 'TOTAL RAINFALL (MM)', 'daily_arrivals_qtl': 'DAILY ARRIVALS (QTL)'},
+            opacity=0.7
+        )
+        
+        fig.update_traces(marker=dict(color=COLORS["ink"], size=8, line=dict(width=1, color=COLORS["paper"])))
+        return apply_newsprint_theme(fig)
+    except Exception:
+        return None

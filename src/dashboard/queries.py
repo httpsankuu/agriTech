@@ -8,12 +8,23 @@ import contextlib
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DB_PATH = os.path.join(BASE_DIR, "Dataset", "agritech_analytics.db")
 
+def _get_db_path():
+    """Return the database path, checking it exists."""
+    if not os.path.exists(DB_PATH):
+        return None
+    return DB_PATH
+
 def get_connection():
     """Create a fresh SQLite connection."""
-    if not os.path.exists(DB_PATH):
+    db_path = _get_db_path()
+    if db_path is None:
         st.error(f"Database not found at {DB_PATH}")
         st.stop()
-    return sqlite3.connect(DB_PATH)
+    try:
+        return sqlite3.connect(db_path)
+    except sqlite3.Error as e:
+        st.error(f"Failed to connect to database: {e}")
+        st.stop()
 
 @st.cache_data(ttl=3600)
 def get_crop_summary():
