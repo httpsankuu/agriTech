@@ -60,7 +60,6 @@ The project processes 5 core datasets covering the full supply chain, translatin
 
 Full column definitions and cleaning rationale are documented in:
 - [`Dataset/clean/DATA_DICTIONARY.md`](Dataset/clean/DATA_DICTIONARY.md)
-- [`Dataset/clean/DATA_QUALITY_REPORT.md`](Dataset/clean/DATA_QUALITY_REPORT.md)
 
 ---
 
