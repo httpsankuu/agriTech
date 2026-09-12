@@ -9,23 +9,23 @@ def render_kpi(label, value, unit="", metadata=None, is_alert=False):
     value_esc = html_mod.escape(str(value))
     unit_esc = html_mod.escape(str(unit))
     
-    # Adaptive font size: shrink for long numbers
+    # Adaptive font size: smaller for longer numbers
     num_len = len(value_esc.replace(',', '').replace('.', ''))
-    if num_len > 8:
-        val_size = '1.8rem'
-    elif num_len > 6:
-        val_size = '2.2rem'
+    if num_len > 7:
+        val_size = '26px'
+    elif num_len > 5:
+        val_size = '32px'
     else:
-        val_size = '3rem'
+        val_size = '42px'
 
-    html_str = f'<div style="border: 1px solid var(--border-color); padding: 1.5rem; height: 100%; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden;">'
-    html_str += f'<div style="font-family: \'JetBrains Mono\', monospace; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{label_esc}</div>'
-    html_str += f'<div style="word-break: break-word; overflow-wrap: break-word;"><span style="font-family: \'Playfair Display\', serif; font-size: {val_size}; font-weight: 700; color: var(--{color_class}); line-height: 1.1;">{value_esc}</span>'
-    html_str += f'<span style="font-family: \'JetBrains Mono\', monospace; font-size: 1rem; margin-left: 0.25rem;">{unit_esc}</span></div>'
+    html_str = '<div style="border: 1px solid var(--border-color); padding: 1.2rem 1.5rem; min-height: 170px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center;">'
+    html_str += f'<div style="font-family: JetBrains Mono, monospace; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 0.8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{label_esc}</div>'
+    html_str += f'<div><span style="font-family: Playfair Display, serif; font-size: {val_size}; font-weight: 700; color: var(--{color_class}); line-height: 1.1; display: block; overflow-wrap: anywhere; word-break: break-word; max-width: 100%;">{value_esc}</span>'
+    html_str += f'<span style="font-family: JetBrains Mono, monospace; font-size: 13px; margin-left: 4px;">{unit_esc}</span></div>'
     
     if metadata:
         meta_esc = html_mod.escape(str(metadata))
-        html_str += f'<div style="font-family: \'Inter\', sans-serif; font-size: 0.85rem; margin-top: 1rem; color: var(--ink); border-top: 1px dashed var(--muted); padding-top: 0.5rem;">{meta_esc}</div>'
+        html_str += f'<div style="font-family: Inter, sans-serif; font-size: 12px; margin-top: 0.8rem; color: var(--ink); border-top: 1px dashed var(--muted); padding-top: 0.5rem;">{meta_esc}</div>'
         
     html_str += '</div>'
     
