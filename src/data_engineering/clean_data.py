@@ -5,7 +5,7 @@ import re
 import json
 import warnings
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings('ignore', category=FutureWarning)
 
 report_data = {}
 
@@ -80,7 +80,7 @@ def clean_price(price_val):
     p_clean = re.sub(r'[^\d.]', '', p_str)
     try:
         return float(p_clean)
-    except:
+    except (ValueError, TypeError):
         return np.nan
 
 def clean_mandi_master(input_path, output_path):
@@ -147,7 +147,7 @@ def clean_arrivals(input_path, output_path):
     report_data[ds_name]['standardized_fields'].append('arrival_quantity_qtl')
     report_data[ds_name]['important_decisions'].append("Preserved original arrival_quantity and unit columns. Added standardized arrival_quantity_qtl.")
     
-    df['date'] = pd.to_datetime(df['date'], errors='coerce', format='mixed')
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
     
     # Validations
     assert df.duplicated().sum() == 0, "Validation Failed: Exact duplicates remain in Mandi Arrivals."
@@ -194,7 +194,7 @@ def clean_price_msp(input_path, output_path, master_df):
     df['max_price'] = df['max_price'].apply(clean_price)
     df['modal_price'] = df['modal_price'].apply(clean_price)
     df['msp'] = df['msp'].apply(clean_price)
-    df['date'] = pd.to_datetime(df['date'], errors='coerce', format='mixed')
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
     
     assert df.duplicated().sum() == 0, "Validation Failed: Exact duplicates remain in Price."
     assert raw_count == report_data[ds_name]['raw_rows'], "Validation Failed: Raw count changed."
@@ -279,7 +279,7 @@ def clean_weather(input_path, output_path):
         
     if 'timestamp' in df.columns:
         df['timestamp'] = df['timestamp'].astype(str).str.replace(' IST', '').str.replace(' UTC', '').replace('nan', '')
-        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce', format='mixed')
+        df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
         
     if 'temperature' in df.columns and 'temp_unit' in df.columns:
         def conv_temp(row):
