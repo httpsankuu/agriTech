@@ -1,6 +1,6 @@
-*.db
 Dataset/*
 !Dataset/clean/DATA_DICTIONARY.md
+!Dataset/agritech_analytics.db
 
 .planning/
 scratch/
