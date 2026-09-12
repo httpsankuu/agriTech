@@ -6,8 +6,8 @@
 ## Phase Progress
 - **Phase 1**: Done
 - **Phase 2**: Done
-- **Phase 3**: Not Started
-- **Phase 4**: Not Started
+- **Phase 3**: Done
+- **Phase 4**: Done
 
 ## Notes
 - Initializing the project based on the Datathon problem statement for Track 3 (AgriTech).

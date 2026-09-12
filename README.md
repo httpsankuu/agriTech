@@ -1,147 +1,168 @@
-# AgriTech - Mandi-to-Market Supply Chain Optimizer
+# AgriTech — Mandi-to-Market Supply Chain Optimizer
 
-A data-driven platform for the State Agriculture Board to monitor daily crop arrivals at local Mandis, track prices against the Minimum Support Price (MSP), and correlate these metrics with weather data. Transforms chaotic, messy raw data into an actionable executive dashboard.
+A data platform that monitors daily crop arrivals at Mandis, tracks prices against MSP, and correlates with weather data. Built for the State Agriculture Board to turn chaotic, multilingual datasets into actionable intelligence.
 
-## Quick Start
+![Python](https://img.shields.io/badge/Python-3.10+-blue) ![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-red) ![SQLite](https://img.shields.io/badge/SQLite-3-green)
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.10 or higher
+- pip
+
+### Installation
 
 ```bash
-# 1. Install dependencies
-pip install -r requirements.txt
+# Clone the repository
+git clone https://github.com/httpsankuu/agriTech.git
+cd agriTech
 
-# 2. Run the data cleaning pipeline
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Running the Pipeline
+
+```bash
+# Step 1: Clean the raw data
 python src/data_engineering/clean_data.py
 
-# 3. Build the analytics database
+# Step 2: Build the analytics database
 python src/analytics/build_model.py
 
-# 4. Launch the dashboard
+# Step 3: Validate the analytics views
+python src/analytics/validate_metrics.py
+
+# Step 4: Launch the dashboard
 streamlit run src/dashboard/app.py
 ```
 
-## Data at a Glance
+The dashboard will open at `http://localhost:8501`.
 
-| Dataset | Raw Rows | Clean Rows | Duplicates Removed |
-|---------|----------|------------|-------------------|
-| Mandi Master | 60 | 57 | 3 (5.0%) |
-| Crop Arrivals | 25,750 | 25,000 | 750 (2.9%) |
-| Prices & MSP | 12,000 | 12,000 | 0 |
-| Transport Logistics | 10,400 | 10,000 | 400 (3.9%) |
-| Weather Sensors | 15,000 | 15,000 | 0 |
+---
 
-**Coverage:** 57 active Mandis, 6 crops (Cotton, Maize, Mustard, Rice, Sugarcane, Wheat), date range Jan 1 – Sep 9, 2026.
+## Data Overview
 
-## Key Analytics Metrics
+The project works with 5 datasets covering the full supply chain — from Mandi infrastructure to crop arrivals, pricing, logistics, and weather.
+
+| Dataset | Rows (Raw) | Rows (Cleaned) | Key Cleaning Actions |
+|---------|-----------|----------------|---------------------|
+| Mandi Master | 60 | 57 | Standardized IDs, title-cased names, removed 3 duplicates |
+| Crop Arrivals | 25,750 | 25,000 | Mapped Hindi/English crop names, converted units to Quintals, removed 750 duplicates |
+| Prices & MSP | 12,000 | 12,000 | Stripped currency symbols, recovered 638 missing districts via join |
+| Transport Logistics | 10,400 | 10,000 | Flagged 539 negative transit times, standardized distances, removed 400 duplicates |
+| Weather Sensors | 15,000 | 15,000 | Converted Fahrenheit to Celsius, inches to millimeters |
+
+**Coverage:** 57 Mandis, 6 crops (Wheat, Rice, Cotton, Maize, Mustard, Sugarcane), Jan – Sep 2026.
+
+Full column definitions are in [`Dataset/clean/DATA_DICTIONARY.md`](Dataset/clean/DATA_DICTIONARY.md).
+Cleaning decisions and rationale are documented in [`Dataset/clean/DATA_QUALITY_REPORT.md`](Dataset/clean/DATA_QUALITY_REPORT.md).
+
+---
+
+## Key Metrics
 
 | Metric | Value |
 |--------|-------|
 | Total Arrivals | 5,659,185 QTL |
-| Price Crash Instances | 3,924 (modal price < MSP) |
-| Total Trips Monitored | 8,455 |
-| Delayed Trips | 1,584 (18.7% delay rate) |
-| Weather-Matched Records | 52 of 3,328 arrival days |
+| Price Crashes (below MSP) | 3,924 instances |
+| Transport Delay Rate | 18.7% (1,584 of 8,455 trips) |
+| Active Mandis | 57 |
+| Crops Tracked | 6 |
 
-## Phase 1: Data Rescue & Engineering
+---
 
-Raw, chaotic datasets were cleaned, standardized, and saved into query-ready formats. See `Dataset/clean/DATA_QUALITY_REPORT.md` for the full quality audit.
+## Dashboard
 
-### Cleaning Steps
+An interactive intelligence dashboard built with Streamlit and Plotly, styled with a custom Newsprint editorial theme.
 
-1. **Mandi Master** — Standardized `mandi_id` to `MANDI-XXX`. Title-cased `district`/`state`. Standardized `mandi_type` values.
-2. **Crop Arrivals** — Mapped multilingual crop names (Hindi/English) to canonical English names. Converted all quantities to Quintals (`arrival_quantity_qtl`). Parsed dates to `YYYY-MM-DD`.
-3. **Prices & MSP** — Stripped currency symbols and commas. Cast to numeric. Recovered 638 missing district values via mandi master join.
-4. **Logistics** — Flagged 539 negative transit times. Standardized distance to kilometers. Cleaned vehicle registration numbers.
-5. **Weather** — Converted temperatures to Celsius. Converted rainfall to millimeters. Standardized timestamps.
+### Sections
 
-### How to Reproduce
+| Section | Description |
+|---------|-------------|
+| **KPI Strip** | Total arrivals, price crashes, delay rate, routes monitored |
+| **Supply Intelligence** | Daily arrival trend, crop distribution, top Mandis by volume |
+| **Price Discovery** | Modal price vs MSP over time, worst crash instances |
+| **Logistics** | Routes with highest delay frequency |
+| **Weather × Supply** | Rainfall vs arrivals correlation, weather coverage |
+| **AI Query Agent** | Ask questions in plain English, get charts automatically |
 
-```bash
-python src/data_engineering/clean_data.py
-```
+### Interactive Filters
 
-## Phase 2: Analytics Layer
+- **Date Range** — narrow any chart to a specific time window
+- **Crop** — filter by Wheat, Rice, Cotton, Maize, Mustard, or Sugarcane
+- **Mandi** — filter by a specific Mandi
+- **District** — filter by district
 
-Builds the SQLite analytical database with 5 fact/dimension tables, 6 analytical views, and 4 performance indexes.
+---
 
-### Analytical Views
+## AI Query Agent
 
-| View | Purpose |
-|------|---------|
-| `vw_crop_summary` | Daily crop arrivals aggregated by Mandi |
-| `vw_mandi_performance` | Top Mandis ranked by arrival volume |
-| `vw_arrival_trends` | Daily/weekly/monthly arrival time series |
-| `vw_price_vs_msp` | Modal price vs MSP with crash detection |
-| `vw_transit_delays` | Route-level delay rates (1.5× threshold) |
-| `vw_weather_impact` | Rainfall & temperature correlated with arrivals |
+Ask questions in natural language and get instant charts and summaries.
 
-### How to Build
+**Examples:**
+- *"Show me the daily arrival trend of Wheat"*
+- *"What are the top 5 mandis by arrival volume?"*
+- *"Show price crashes for Cotton"*
+- *"What is the correlation between rainfall and arrivals?"*
 
-```bash
-python src/analytics/build_model.py
-```
+### How It Works
 
-### Validation
+1. **Parse** — extracts intent, crop, mandi, and time range from your question
+2. **Query** — generates SQL against the analytics database
+3. **Visualize** — selects the best chart type (line, bar, scatter) and renders it
+4. **Summarize** — provides a text summary with key statistics
 
-```bash
-python src/analytics/validate_metrics.py
-```
+| Query Type | Example | Chart |
+|-----------|---------|-------|
+| Trend | "arrival trend of Wheat" | Line |
+| Top N | "top 5 mandis" | Horizontal bar |
+| Price Crash | "price crashes for Cotton" | Line with MSP |
+| Distribution | "distribution across crops" | Bar |
+| Correlation | "rainfall vs arrivals" | Scatter |
 
-## Phase 3: Executive Dashboard
-
-An interactive Newsprint-style intelligence dashboard built with Streamlit and Plotly.
-
-### Dashboard Sections
-
-- **KPI Strip** — Total arrivals, price crashes, transport delay rate, routes monitored
-- **Supply Intelligence** — Daily arrival trend chart + crop distribution bar chart + top Mandis table
-- **Price Discovery** — Modal price vs MSP line chart + crash watch list with worst gaps
-- **Logistics** — Routes under pressure (highest delay frequency)
-- **Weather × Supply** — Rainfall vs arrivals scatter plot + weather coverage stats
-- **Methodology** — Data transparency and assumptions expander
-
-### Architecture
-
-| File | Role |
-|------|------|
-| `app.py` | Dashboard orchestration, filters, layout |
-| `components.py` | Reusable UI elements (KPI cards, section headers, masthead) |
-| `charts.py` | Plotly visualization functions with Newsprint theme |
-| `queries.py` | SQLite data access layer with Streamlit caching (1hr TTL) |
-| `styles.css` | Centralized Newsprint styling (Playfair Display, JetBrains Mono, Inter) |
-
-### How to Run
-
-```bash
-streamlit run src/dashboard/app.py
-```
-
-## Tech Stack
-
-- **Data Engineering**: Python, Pandas, NumPy
-- **Analytics**: SQLite, SQL views and indexes
-- **Dashboard**: Streamlit, Plotly
-- **Styling**: Custom CSS (Newsprint editorial theme)
+---
 
 ## Project Structure
 
 ```
-.
+agriTech/
 ├── Dataset/
-│   ├── *.csv, *.json, *.xlsx       # Raw datathon data
-│   ├── clean/                       # Cleaned CSVs + data dictionary
-│   └── agritech_analytics.db        # SQLite analytics database
+│   ├── *.csv, *.json, *.xlsx          # Raw data
+│   ├── clean/
+│   │   ├── *.csv                      # Cleaned data
+│   │   ├── DATA_DICTIONARY.md         # Column definitions
+│   │   └── DATA_QUALITY_REPORT.md     # Cleaning audit
+│   └── agritech_analytics.db          # Analytics database
 ├── src/
 │   ├── data_engineering/
-│   │   └── clean_data.py            # Data rescue pipeline
+│   │   └── clean_data.py              # Data cleaning pipeline
 │   ├── analytics/
-│   │   ├── build_model.py           # DB builder + view creator
-│   │   └── validate_metrics.py      # View validation suite
+│   │   ├── build_model.py             # Database builder
+│   │   └── validate_metrics.py        # View validation
 │   └── dashboard/
-│       ├── app.py                   # Streamlit dashboard
-│       ├── charts.py                # Plotly chart functions
-│       ├── components.py            # UI components
-│       ├── queries.py               # Data access layer
-│       └── styles.css               # Newsprint theme CSS
+│       ├── app.py                     # Main dashboard
+│       ├── charts.py                  # Chart functions
+│       ├── components.py              # UI components
+│       ├── agent.py                   # AI query engine
+│       ├── queries.py                 # Data access layer
+│       └── styles.css                 # Theme styles
 ├── requirements.txt
 └── README.md
 ```
+
+---
+
+## Tech Stack
+
+| Layer | Tools |
+|-------|-------|
+| Data Engineering | Python, Pandas, NumPy |
+| Database | SQLite with indexed views |
+| Dashboard | Streamlit, Plotly |
+| AI Agent | Pattern matching with optional LLM integration |
+| Styling | Custom CSS (Newsprint theme) |
 

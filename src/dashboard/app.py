@@ -12,6 +12,7 @@ from queries import (
 )
 import components as ui
 import charts
+import agent
 
 # Page config
 st.set_page_config(
@@ -216,6 +217,46 @@ def main():
         wthr_html += "</div>"
         st.html(wthr_html)
         
+    # ── AI Agent ──────────────────────────────────────────────────────
+    ui.render_section_header("AI QUERY AGENT")
+    st.html("<p style='font-family: Inter; font-size: 0.9rem;'>Ask questions about the supply chain data in plain English. The agent converts your query into SQL and generates charts automatically.</p>")
+
+    # Suggested queries
+    with st.expander("SUGGESTED QUERIES", expanded=False):
+        for sq in agent.SUGGESTED_QUERIES:
+            if st.button(sq, key=f"sq_{sq[:30]}", use_container_width=True):
+                st.session_state["agent_query"] = sq
+                st.rerun()
+
+    # Chat input
+    user_query = st.chat_input("Ask about arrivals, prices, weather, logistics...")
+    if user_query:
+        st.session_state["agent_query"] = user_query
+
+    # Process query from session state (buttons or chat input)
+    if "agent_query" in st.session_state and st.session_state["agent_query"]:
+        query = st.session_state["agent_query"]
+        st.session_state["agent_query"] = None  # consume the query
+
+        with st.chat_message("user"):
+            st.markdown(query)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                response = agent.run_agent(query)
+
+            if response.error:
+                st.error(response.error)
+            else:
+                st.markdown(response.summary)
+                if response.chart:
+                    st.plotly_chart(response.chart, use_container_width=True)
+                if response.data is not None and not response.data.empty:
+                    with st.expander("VIEW DATA TABLE"):
+                        st.dataframe(response.data, hide_index=True, use_container_width=True)
+                with st.expander("VIEW SQL QUERY"):
+                    st.code(response.sql_query, language="sql")
+
     # Footer / Methodology
     ui.render_section_header("METHODOLOGY & DATA TRANSPARENCY")
     with st.expander("VIEW METHODOLOGY"):
