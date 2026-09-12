@@ -34,7 +34,8 @@
 - **destination_warehouse**: Destination warehouse name.
 - **departure_time**: Departure timestamp.
 - **arrival_time**: Arrival timestamp.
-- **transit_hours**: Transit time in hours (converted to positive absolute values).
+- **transit_hours**: Original transit time in hours. Negative values are retained as invalid records and excluded from valid transit-time calculations.
+- **transit_hours_clean**: Clean transit time in hours. Invalid negative transit times are set to null and excluded from valid transit-time calculations.
 - **vehicle_no**: Standardized vehicle registration number (alphanumeric only, uppercase).
 - **driver_id**: Driver identifier.
 - **distance_km**: Distance converted strictly to Kilometers (miles were converted by multiplying by 1.60934).
