@@ -3,3 +3,4 @@ Dataset/*
 !Dataset/clean/DATA_DICTIONARY.md
 
 scratch/
+__pycache__/
