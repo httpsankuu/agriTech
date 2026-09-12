@@ -228,10 +228,24 @@ def main():
                 st.session_state["agent_query"] = sq
                 st.rerun()
 
-    # Chat input
-    user_query = st.chat_input("Ask about arrivals, prices, weather, logistics...")
-    if user_query:
-        st.session_state["agent_query"] = user_query
+    # Custom Query Input (Highlighted)
+    st.markdown("""
+        <div style="background-color: var(--agri-green); padding: 2px; border-radius: 4px; margin-top: 1rem; margin-bottom: 1rem;">
+            <div style="background-color: var(--paper); padding: 1rem; border-radius: 2px;">
+                <h4 style="margin-top: 0; color: var(--agri-green);">ASK A CUSTOM QUESTION</h4>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    with st.form(key='ai_query_form', clear_on_submit=True):
+        col_input, col_btn = st.columns([5, 1])
+        with col_input:
+            user_query = st.text_input("Query", label_visibility="collapsed", placeholder="E.g., What is the average price of Wheat in Pune?")
+        with col_btn:
+            submit_btn = st.form_submit_button("ASK AGENT", type="primary", use_container_width=True)
+            
+        if submit_btn and user_query:
+            st.session_state["agent_query"] = user_query
 
     # Process query from session state (buttons or chat input)
     if "agent_query" in st.session_state and st.session_state["agent_query"]:
