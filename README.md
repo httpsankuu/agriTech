@@ -144,12 +144,20 @@ agriTech/
 │   ├── clean/
 │   │   ├── DATA_DICTIONARY.md
 │   │   ├── DATA_QUALITY_REPORT.md
-│   │   └── track3_*_clean.csv
+│   │   ├── track3_mandi_arrivals_clean.csv
+│   │   ├── track3_mandi_master_clean.csv
+│   │   ├── track3_price_and_msp_clean.csv
+│   │   ├── track3_transport_logistics_clean.csv
+│   │   └── track3_weather_sensors_clean.csv
 │   ├── agritech_analytics.db
 │   ├── analytics.db
 │   ├── crops.txt
 │   ├── track3_dataset_notes.txt
-│   └── track3_*.csv/.json/.xlsx
+│   ├── track3_mandi_arrivals.csv
+│   ├── track3_mandi_master.csv
+│   ├── track3_price_and_msp.json
+│   ├── track3_transport_logistics.csv
+│   └── track3_weather_sensors.xlsx
 ├── src/
 │   ├── analytics/
 │   │   ├── build_model.py
@@ -164,9 +172,11 @@ agriTech/
 │   │   └── styles.css
 │   └── data_engineering/
 │       └── clean_data.py
+├── .devcontainer/
 ├── .gitignore
 ├── .streamlit/
 │   └── config.toml
+├── Problem Statements - TransOrg AgentIQ Datathon.pdf
 ├── README.md
 └── requirements.txt
 ```
