@@ -142,22 +142,8 @@ An integrated natural-language interface allowing users to interact with the agr
 agriTech/
 ├── Dataset/
 │   ├── clean/
-│   │   ├── DATA_DICTIONARY.md
-│   │   ├── DATA_QUALITY_REPORT.md
-│   │   ├── track3_mandi_arrivals_clean.csv
-│   │   ├── track3_mandi_master_clean.csv
-│   │   ├── track3_price_and_msp_clean.csv
-│   │   ├── track3_transport_logistics_clean.csv
-│   │   └── track3_weather_sensors_clean.csv
-│   ├── agritech_analytics.db
-│   ├── analytics.db
-│   ├── crops.txt
-│   ├── track3_dataset_notes.txt
-│   ├── track3_mandi_arrivals.csv
-│   ├── track3_mandi_master.csv
-│   ├── track3_price_and_msp.json
-│   ├── track3_transport_logistics.csv
-│   └── track3_weather_sensors.xlsx
+│   │   └── DATA_DICTIONARY.md
+│   └── agritech_analytics.db
 ├── src/
 │   ├── analytics/
 │   │   ├── build_model.py
@@ -172,11 +158,9 @@ agriTech/
 │   │   └── styles.css
 │   └── data_engineering/
 │       └── clean_data.py
-├── .devcontainer/
 ├── .gitignore
 ├── .streamlit/
 │   └── config.toml
-├── Problem Statements - TransOrg AgentIQ Datathon.pdf
 ├── README.md
 └── requirements.txt
 ```
