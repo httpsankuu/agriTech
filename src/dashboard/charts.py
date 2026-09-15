@@ -1,5 +1,8 @@
+import logging
 import plotly.express as px
 import plotly.graph_objects as go
+
+logger = logging.getLogger(__name__)
 
 # Design Tokens — kept in sync with styles.css
 COLORS = {
@@ -66,6 +69,7 @@ def create_arrival_trend_chart(df):
         fig.update_traces(fill='tozeroy', fillcolor='rgba(17, 17, 17, 0.05)')
         return apply_newsprint_theme(fig)
     except Exception:
+        logger.exception("Failed to create arrival trend chart")
         return None
 
 def create_crop_distribution_chart(df):
@@ -91,6 +95,7 @@ def create_crop_distribution_chart(df):
         fig.update_layout(yaxis=dict(showgrid=False))
         return fig
     except Exception:
+        logger.exception("Failed to create crop distribution chart")
         return None
 
 def create_price_vs_msp_chart(df):
@@ -135,6 +140,7 @@ def create_price_vs_msp_chart(df):
         
         return apply_newsprint_theme(fig)
     except Exception:
+        logger.exception("Failed to create price vs MSP chart")
         return None
 
 def create_weather_impact_chart(df):
@@ -157,4 +163,5 @@ def create_weather_impact_chart(df):
         fig.update_traces(marker=dict(color=COLORS["ink"], size=8, line=dict(width=1, color=COLORS["paper"])))
         return apply_newsprint_theme(fig)
     except Exception:
+        logger.exception("Failed to create weather impact chart")
         return None

@@ -7,12 +7,15 @@ Converts natural language queries into SQL + Plotly charts.
 
 import re
 import os
+import logging
 import sqlite3
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from dataclasses import dataclass, field
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 # ── Design Tokens (kept in sync with charts.py) ──────────────────────────
 COLORS = {
@@ -269,96 +272,125 @@ def parse_query(text: str) -> ParsedQuery:
 
 # ── SQL Generator ─────────────────────────────────────────────────────────
 
-def _get_time_filter(alias: str, time_range: Optional[str]) -> str:
+def _get_time_filter(alias: str, time_range: Optional[str]) -> tuple:
     """Generate SQL WHERE clause for time range."""
     if not time_range:
-        return ""
+        return ("", [])
     col = f"{alias}.date_str" if alias else "date_str"
     if time_range.startswith("last_"):
         days = int(time_range.split("_")[1])
-        return f" AND {col} >= date('now', '-{days} days')"
-    return ""
+        return (f" AND {col} >= date('now', '-{days} days')", [])
+    return ("", [])
 
 
-def _get_crop_filter(alias: str, crop: Optional[str]) -> str:
+def _get_crop_filter(alias: str, crop: Optional[str]) -> tuple:
     """Generate SQL WHERE clause for crop."""
     if not crop:
-        return ""
+        return ("", [])
     col = f"{alias}.crop_name" if alias else "crop_name"
-    return f" AND {col} = '{crop}'"
+    return (f" AND {col} = ?", [crop])
 
 
-def _get_mandi_filter(alias: str, mandi: Optional[str]) -> str:
+def _get_mandi_filter(alias: str, mandi: Optional[str]) -> tuple:
     """Generate SQL WHERE clause for mandi name."""
     if not mandi:
-        return ""
+        return ("", [])
     col = f"{alias}.mandi_name" if alias else "mandi_name"
-    return f" AND {col} LIKE '%{mandi}%'"
+    return (f" AND {col} LIKE ?", [f"%{mandi}%"])
 
 
-def _get_district_filter(alias: str, district: Optional[str]) -> str:
+def _get_district_filter(alias: str, district: Optional[str]) -> tuple:
     """Generate SQL WHERE clause for district."""
     if not district:
-        return ""
+        return ("", [])
     col = f"{alias}.district" if alias else "district"
-    return f" AND {col} LIKE '%{district}%'"
+    return (f" AND {col} LIKE ?", [f"%{district}%"])
 
 
-def generate_sql(parsed: ParsedQuery) -> str:
-    """Generate a SQL query from the parsed query intent."""
-    crop_f = _get_crop_filter("a", parsed.crop)
-    mandi_f = _get_mandi_filter("m", parsed.mandi)
-    district_f = _get_district_filter("m", parsed.district)
-    time_f = _get_time_filter("a", parsed.time_range)
+def generate_sql(parsed: ParsedQuery) -> tuple:
+    """Generate a SQL query from the parsed query intent.
+
+    Returns:
+        A tuple of (sql_string, params_list) for safe parameterized execution.
+    """
+    params = []
+
+    crop_f, crop_p = _get_crop_filter("a", parsed.crop)
+    mandi_f, mandi_p = _get_mandi_filter("m", parsed.mandi)
+    district_f, district_p = _get_district_filter("m", parsed.district)
+    time_f, time_p = _get_time_filter("a", parsed.time_range)
     all_filters = f"WHERE 1=1{crop_f}{mandi_f}{district_f}{time_f}"
+    params.extend(crop_p + mandi_p + district_p + time_p)
 
     if parsed.intent == "trend":
-        return f"""
+        return (
+            f"""
             SELECT a.date_str as date, SUM(a.arrival_quantity_qtl) as value
             FROM fact_arrivals a
             LEFT JOIN dim_mandi m ON a.mandi_id = m.mandi_id
             {all_filters}
             GROUP BY a.date_str
             ORDER BY a.date_str
-        """
+            """,
+            params,
+        )
 
     elif parsed.intent == "comparison" and parsed.metric == "modal_price":
-        return f"""
+        cmp_crop_f, cmp_crop_p = _get_crop_filter('p', parsed.crop)
+        cmp_mandi_f, cmp_mandi_p = _get_mandi_filter('m', parsed.mandi)
+        cmp_district_f, cmp_district_p = _get_district_filter('m', parsed.district)
+        cmp_time_f, cmp_time_p = _get_time_filter('p', parsed.time_range)
+        cmp_params = cmp_crop_p + cmp_mandi_p + cmp_district_p + cmp_time_p
+        return (
+            f"""
             SELECT a.date_str as date, p.modal_price as value, p.msp as msp_line
             FROM fact_prices p
             LEFT JOIN dim_mandi m ON p.mandi_id = m.mandi_id
             LEFT JOIN (SELECT DISTINCT date_str FROM fact_arrivals) a ON p.date_str = a.date_str
-            WHERE 1=1{_get_crop_filter('p', parsed.crop)}{_get_mandi_filter('m', parsed.mandi)}{_get_district_filter('m', parsed.district)}{_get_time_filter('p', parsed.time_range)}
+            WHERE 1=1{cmp_crop_f}{cmp_mandi_f}{cmp_district_f}{cmp_time_f}
             ORDER BY p.date_str
-        """
+            """,
+            cmp_params,
+        )
 
     elif parsed.intent == "price_check":
-        return f"""
+        pc_crop_f, pc_crop_p = _get_crop_filter('p', parsed.crop)
+        pc_mandi_f, pc_mandi_p = _get_mandi_filter('p', parsed.mandi)
+        pc_district_f, pc_district_p = _get_district_filter('p', parsed.district)
+        pc_params = pc_crop_p + pc_mandi_p + pc_district_p
+        return (
+            f"""
             SELECT p.date as date, p.mandi_name, p.crop_name,
                    p.modal_price as value, p.msp as msp_line,
                    (p.modal_price - p.msp) as price_deviation
             FROM vw_price_vs_msp p
             WHERE p.is_price_crash = 1
-            {_get_crop_filter('p', parsed.crop)}
-            {_get_mandi_filter('p', parsed.mandi)}
-            {_get_district_filter('p', parsed.district)}
+            {pc_crop_f}
+            {pc_mandi_f}
+            {pc_district_f}
             ORDER BY p.date
-            LIMIT {parsed.limit}
-        """
+            LIMIT ?
+            """,
+            pc_params + [parsed.limit],
+        )
 
     elif parsed.intent == "distribution":
-        return f"""
+        return (
+            f"""
             SELECT a.crop_name, SUM(a.arrival_quantity_qtl) as value
             FROM fact_arrivals a
             LEFT JOIN dim_mandi m ON a.mandi_id = m.mandi_id
             {all_filters}
             GROUP BY a.crop_name
             ORDER BY value DESC
-        """
+            """,
+            params,
+        )
 
     elif parsed.intent == "correlation":
         metric_col = "rainfall_mm" if "rain" in parsed.raw_query.lower() else "temperature_c"
-        return f"""
+        return (
+            f"""
             SELECT w.date_str as date, SUM(a.arrival_quantity_qtl) as value,
                    w.{metric_col} as x_value
             FROM fact_arrivals a
@@ -367,21 +399,27 @@ def generate_sql(parsed: ParsedQuery) -> str:
             {all_filters} AND w.{metric_col} IS NOT NULL
             GROUP BY a.date_str, w.{metric_col}
             ORDER BY a.date_str
-        """
+            """,
+            params,
+        )
 
     elif parsed.intent == "top_n":
-        return f"""
+        return (
+            f"""
             SELECT m.mandi_name as label, SUM(a.arrival_quantity_qtl) as value
             FROM fact_arrivals a
             LEFT JOIN dim_mandi m ON a.mandi_id = m.mandi_id
             {all_filters}
             GROUP BY m.mandi_name
             ORDER BY value DESC
-            LIMIT {parsed.limit}
-        """
+            LIMIT ?
+            """,
+            params + [parsed.limit],
+        )
 
     else:  # summary / fallback
-        return f"""
+        return (
+            f"""
             SELECT a.date_str as date, a.crop_name,
                    SUM(a.arrival_quantity_qtl) as total_arrivals,
                    COUNT(DISTINCT a.mandi_id) as mandis_active
@@ -391,7 +429,9 @@ def generate_sql(parsed: ParsedQuery) -> str:
             GROUP BY a.date_str, a.crop_name
             ORDER BY a.date_str
             LIMIT 100
-        """
+            """,
+            params,
+        )
 
 
 # ── Chart Builder ─────────────────────────────────────────────────────────
@@ -501,6 +541,7 @@ def build_chart(df: pd.DataFrame, parsed: ParsedQuery):
         return None
 
     except Exception:
+        logger.exception("Failed to build chart for intent=%s", parsed.intent)
         return None
 
 
@@ -617,8 +658,8 @@ def run_agent(query: str) -> AgentResponse:
         # 1. Parse the query
         parsed = parse_query(query)
 
-        # 2. Generate SQL
-        sql = generate_sql(parsed)
+        # 2. Generate SQL + params
+        sql, params = generate_sql(parsed)
 
         # 3. Execute SQL
         if not os.path.exists(DB_PATH):
@@ -626,7 +667,7 @@ def run_agent(query: str) -> AgentResponse:
 
         conn = sqlite3.connect(DB_PATH)
         try:
-            df = pd.read_sql(sql, conn)
+            df = pd.read_sql(sql, conn, params=params)
         finally:
             conn.close()
 
@@ -651,6 +692,7 @@ def run_agent(query: str) -> AgentResponse:
         )
 
     except Exception as e:
+        logger.exception("Agent error for query: %s", query[:120])
         return AgentResponse(error=f"Agent error: {str(e)}")
 
 

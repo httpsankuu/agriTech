@@ -1,6 +1,7 @@
 import sqlite3
 import pandas as pd
 import os
+import sys
 
 def build_model():
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -178,6 +179,7 @@ def build_model():
     except Exception as e:
         print(f"ERROR: Build failed: {e}")
         conn.rollback()
+        sys.exit(1)
     finally:
         conn.close()
 
