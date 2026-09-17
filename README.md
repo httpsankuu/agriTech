@@ -144,6 +144,9 @@ agriTech/
 │   ├── clean/
 │   │   └── DATA_DICTIONARY.md
 │   └── agritech_analytics.db
+├── Presentation/
+│   ├── Presentation - Mandi to Market Optimizer.pptx
+│   └── Presentation - Mandi to Market Optimizer PDF.pdf
 ├── src/
 │   ├── analytics/
 │   │   ├── build_model.py
