@@ -140,11 +140,16 @@ An integrated natural-language interface allowing users to interact with the agr
 
 ```text
 agriTech/
+├── .devcontainer/
+│   └── devcontainer.json
+├── .streamlit/
+│   └── config.toml
 ├── Dataset/
 │   ├── clean/
 │   │   └── DATA_DICTIONARY.md
 │   └── agritech_analytics.db
 ├── Presentation/
+│   ├── AgriTech_Presentation_Notes.pdf
 │   ├── Presentation - Mandi to Market Optimizer.pptx
 │   └── Presentation - Mandi to Market Optimizer PDF.pdf
 ├── src/
@@ -162,8 +167,6 @@ agriTech/
 │   └── data_engineering/
 │       └── clean_data.py
 ├── .gitignore
-├── .streamlit/
-│   └── config.toml
 ├── README.md
 └── requirements.txt
 ```
